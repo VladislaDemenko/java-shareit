@@ -2,6 +2,7 @@ package ru.practicum.shareit.request;
 
 import org.springframework.stereotype.Repository;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class ItemRequestRepository {
@@ -23,7 +24,7 @@ public class ItemRequestRepository {
     public List<ItemRequest> findAllByRequesterId(Long requesterId) {
         return requests.values().stream()
                 .filter(request -> request.getRequesterId().equals(requesterId))
-                .toList();
+                .collect(Collectors.toList());  // ← Исправлено для Java 11
     }
 
     public List<ItemRequest> findAll() {

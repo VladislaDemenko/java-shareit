@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking;
 
 import org.springframework.stereotype.Repository;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class BookingRepository {
@@ -23,7 +24,7 @@ public class BookingRepository {
     public List<Booking> findAllByBookerId(Long bookerId) {
         return bookings.values().stream()
                 .filter(booking -> booking.getBookerId().equals(bookerId))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public List<Booking> findAllByItemOwnerId(Long ownerId) {

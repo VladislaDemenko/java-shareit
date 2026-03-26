@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import java.util.List;
 
 @Slf4j
