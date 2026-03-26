@@ -20,10 +20,7 @@
 
 	<properties>
 		<java.version>21</java.version>
-		<maven.compiler.source>21</maven.compiler.source>
-		<maven.compiler.target>21</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<lombok.version>1.18.30</lombok.version>
 	</properties>
 
 	<dependencies>
@@ -40,8 +37,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>${lombok.version}</version>
-			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
@@ -65,24 +61,38 @@
 					</excludes>
 				</configuration>
 			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.11.0</version>
-				<configuration>
-					<source>21</source>
-					<target>21</target>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-							<version>${lombok.version}</version>
-						</path>
-					</annotationProcessorPaths>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
+
+	<!-- Этот хуй нужен для CI/CD -->
+	<profiles>
+		<profile>
+			<id>check</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-enforcer-plugin</artifactId>
+						<version>3.3.0</version>
+						<executions>
+							<execution>
+								<id>enforce</id>
+								<goals>
+									<goal>enforce</goal>
+								</goals>
+								<configuration>
+									<rules>
+										<requireJavaVersion>
+											<version>21</version>
+										</requireJavaVersion>
+									</rules>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>
