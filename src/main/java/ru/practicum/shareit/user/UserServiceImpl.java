@@ -37,12 +37,16 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
 
         if (userDto.getEmail() != null && !userDto.getEmail().equals(existingUser.getEmail())) {
-            if (repository.existsByEmailAndIdNot(userDto.getEmail(), id)) {
+            if (repository.existsByEmail(userDto.getEmail())) {
                 throw new IllegalArgumentException("Пользователь с таким email уже существует");
             }
+            existingUser.setEmail(userDto.getEmail());
         }
 
-        mapper.updateEntity(existingUser, userDto);
+        if (userDto.getName() != null) {
+            existingUser.setName(userDto.getName());
+        }
+
         repository.save(existingUser);
 
         return mapper.toDto(existingUser);

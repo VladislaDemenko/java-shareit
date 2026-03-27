@@ -4,6 +4,7 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,7 +33,6 @@ public class BookingRepository {
     }
 
     public List<Booking> findAllByItemOwnerId(Long ownerId, ItemRepository itemRepository) {
-        // Получаем все вещи владельца
         List<Item> ownerItems = itemRepository.findAllByOwnerId(ownerId);
         Set<Long> itemIds = ownerItems.stream().map(Item::getId).collect(Collectors.toSet());
 
@@ -40,5 +40,21 @@ public class BookingRepository {
                 .filter(booking -> itemIds.contains(booking.getItemId()))
                 .sorted(Comparator.comparing(Booking::getStart).reversed())
                 .collect(Collectors.toList());
+    }
+
+    public Optional<Booking> findLastBooking(Long itemId, LocalDateTime now) {
+        return bookings.values().stream()
+                .filter(booking -> booking.getItemId().equals(itemId))
+                .filter(booking -> booking.getStart().isBefore(now))
+                .filter(booking -> booking.getStatus() == Booking.BookingStatus.APPROVED)
+                .max(Comparator.comparing(Booking::getStart));
+    }
+
+    public Optional<Booking> findNextBooking(Long itemId, LocalDateTime now) {
+        return bookings.values().stream()
+                .filter(booking -> booking.getItemId().equals(itemId))
+                .filter(booking -> booking.getStart().isAfter(now))
+                .filter(booking -> booking.getStatus() == Booking.BookingStatus.APPROVED)
+                .min(Comparator.comparing(Booking::getStart));
     }
 }

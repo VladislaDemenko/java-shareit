@@ -2,11 +2,13 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDto;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -54,5 +56,15 @@ public class BookingController {
             @RequestParam(defaultValue = "ALL") String state) {
         log.info("GET /bookings/owner with state: {}", state);
         return bookingService.getAllByOwner(userId, state);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleNotFound(IllegalArgumentException e) {
+        if (e.getMessage().contains("не найдено") || e.getMessage().contains("не найден")) {
+            log.error("Not found error: {}", e.getMessage());
+            return Map.of("error", e.getMessage());
+        }
+        throw e;
     }
 }
