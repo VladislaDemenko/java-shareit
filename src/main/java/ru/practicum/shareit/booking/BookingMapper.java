@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking;
 
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.dto.BookingDto;
+import java.time.LocalDateTime;
 
 @Component
 public class BookingMapper {
@@ -31,7 +32,11 @@ public class BookingMapper {
         booking.setItemId(bookingDto.getItemId());
         booking.setBookerId(bookingDto.getBookerId());
         if (bookingDto.getStatus() != null) {
-            booking.setStatus(Booking.BookingStatus.valueOf(bookingDto.getStatus()));
+            try {
+                booking.setStatus(Booking.BookingStatus.valueOf(bookingDto.getStatus()));
+            } catch (IllegalArgumentException e) {
+                booking.setStatus(Booking.BookingStatus.WAITING);
+            }
         }
         return booking;
     }
