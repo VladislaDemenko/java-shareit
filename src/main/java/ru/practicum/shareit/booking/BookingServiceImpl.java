@@ -28,14 +28,14 @@ public class BookingServiceImpl implements BookingService {
         validateUser(userId);
 
         Item item = itemRepository.findById(bookingDto.getItemId())
-                .orElseThrow(() -> new IllegalArgumentException("Вещь не найдена"));
+                .orElseThrow(() -> new IllegalArgumentException("Вещь с id=" + bookingDto.getItemId() + " не найдена")); // id вещи
 
         if (item.getOwnerId().equals(userId)) {
-            throw new IllegalArgumentException("Нельзя бронировать свою вещь");
+            throw new IllegalArgumentException("Нельзя бронировать свою вещь с id=" + item.getId()); // id вещи
         }
 
         if (!Boolean.TRUE.equals(item.getAvailable())) {
-            throw new IllegalArgumentException("Вещь недоступна для бронирования");
+            throw new IllegalArgumentException("Вещь с id=" + item.getId() + " недоступна для бронирования"); // id вещи
         }
 
         Booking booking = bookingMapper.toEntity(bookingDto);
@@ -54,17 +54,17 @@ public class BookingServiceImpl implements BookingService {
         validateUser(userId);
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new IllegalArgumentException("Бронирование не найдено"));
+                .orElseThrow(() -> new IllegalArgumentException("Бронирование с id=" + bookingId + " не найдено")); // id бронирования
 
         Item item = itemRepository.findById(booking.getItemId())
-                .orElseThrow(() -> new IllegalArgumentException("Вещь не найдена"));
+                .orElseThrow(() -> new IllegalArgumentException("Вещь с id=" + booking.getItemId() + " не найдена")); // id вещи
 
         if (!item.getOwnerId().equals(userId)) {
-            throw new IllegalArgumentException("Подтвердить бронирование может только владелец вещи");
+            throw new IllegalArgumentException("Подтвердить бронирование может только владелец вещи с id=" + item.getId()); // id вещи
         }
 
         if (booking.getStatus() != Booking.BookingStatus.WAITING) {
-            throw new IllegalArgumentException("Бронирование уже подтверждено или отклонено");
+            throw new IllegalArgumentException("Бронирование с id=" + bookingId + " уже подтверждено или отклонено"); // id бронирования
         }
 
         booking.setStatus(approved ? Booking.BookingStatus.APPROVED : Booking.BookingStatus.REJECTED);
@@ -80,13 +80,14 @@ public class BookingServiceImpl implements BookingService {
         validateUser(userId);
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new IllegalArgumentException("Бронирование не найдено"));
+                .orElseThrow(() -> new IllegalArgumentException("Бронирование с id=" + bookingId + " не найдено")); // id бронирования
 
         Item item = itemRepository.findById(booking.getItemId())
-                .orElseThrow(() -> new IllegalArgumentException("Вещь не найдена"));
+                .orElseThrow(() -> new IllegalArgumentException("Вещь с id=" + booking.getItemId() + " не найдена")); // id вещи
 
         if (!booking.getBookerId().equals(userId) && !item.getOwnerId().equals(userId)) {
-            throw new IllegalArgumentException("Просмотреть бронирование может только автор или владелец вещи");
+            throw new IllegalArgumentException("Просмотреть бронирование может только автор (id=" + booking.getBookerId() + // id автора
+                    ") или владелец вещи (id=" + item.getOwnerId() + ")"); // id владельца
         }
 
         return bookingMapper.toDto(booking);
@@ -151,7 +152,7 @@ public class BookingServiceImpl implements BookingService {
 
     private void validateUser(Long userId) {
         if (!userRepository.existsById(userId)) {
-            throw new IllegalArgumentException("Пользователь не найден");
+            throw new IllegalArgumentException("Пользователь с id=" + userId + " не найден"); // id пользователя
         }
     }
 }
