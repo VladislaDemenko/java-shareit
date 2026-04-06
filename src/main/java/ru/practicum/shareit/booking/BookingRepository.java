@@ -1,60 +1,27 @@
 package ru.practicum.shareit.booking;
 
-import org.springframework.stereotype.Repository;
-import ru.practicum.shareit.item.ItemRepository;
-import ru.practicum.shareit.item.model.Item;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
 
-@Repository
-public class BookingRepository {
-    private final Map<Long, Booking> bookings = new HashMap<>();
-    private long currentId = 1;
+public interface BookingRepository extends JpaRepository<Booking, Long> {
+    List<Booking> findAllByBookerIdOrderByStartDesc(Long bookerId);
 
-    public Booking save(Booking booking) {
-        if (booking.getId() == null) {
-            booking.setId(currentId++);
-        }
-        bookings.put(booking.getId(), booking);
-        return booking;
-    }
+    List<Booking> findAllByBookerId(Long bookerId);
 
-    public Optional<Booking> findById(Long id) {
-        return Optional.ofNullable(bookings.get(id));
-    }
+    @Query("SELECT b FROM Booking b WHERE b.itemId IN (SELECT i.id FROM Item i WHERE i.ownerId = :ownerId) ORDER BY b.start DESC")
+    List<Booking> findAllByItemOwnerId(@Param("ownerId") Long ownerId);
 
-    public List<Booking> findAllByBookerId(Long bookerId) {
-        return bookings.values().stream()
-                .filter(booking -> booking.getBookerId().equals(bookerId))
-                .sorted(Comparator.comparing(Booking::getStart).reversed())
-                .collect(Collectors.toList());
-    }
+    @Query("SELECT b FROM Booking b WHERE b.itemId = :itemId AND b.status = 'APPROVED' AND b.start < :now ORDER BY b.start DESC")
+    List<Booking> findLastBookings(@Param("itemId") Long itemId, @Param("now") LocalDateTime now, Pageable pageable);
 
-    public List<Booking> findAllByItemOwnerId(Long ownerId, ItemRepository itemRepository) {
-        List<Item> ownerItems = itemRepository.findAllByOwnerId(ownerId);
-        Set<Long> itemIds = ownerItems.stream().map(Item::getId).collect(Collectors.toSet());
+    @Query("SELECT b FROM Booking b WHERE b.itemId = :itemId AND b.status = 'APPROVED' AND b.start > :now ORDER BY b.start ASC")
+    List<Booking> findNextBookings(@Param("itemId") Long itemId, @Param("now") LocalDateTime now, Pageable pageable);
 
-        return bookings.values().stream()
-                .filter(booking -> itemIds.contains(booking.getItemId()))
-                .sorted(Comparator.comparing(Booking::getStart).reversed())
-                .collect(Collectors.toList());
-    }
-
-    public Optional<Booking> findLastBooking(Long itemId, LocalDateTime now) {
-        return bookings.values().stream()
-                .filter(booking -> booking.getItemId().equals(itemId))
-                .filter(booking -> booking.getStart().isBefore(now))
-                .filter(booking -> booking.getStatus() == Booking.BookingStatus.APPROVED)
-                .max(Comparator.comparing(Booking::getStart));
-    }
-
-    public Optional<Booking> findNextBooking(Long itemId, LocalDateTime now) {
-        return bookings.values().stream()
-                .filter(booking -> booking.getItemId().equals(itemId))
-                .filter(booking -> booking.getStart().isAfter(now))
-                .filter(booking -> booking.getStatus() == Booking.BookingStatus.APPROVED)
-                .min(Comparator.comparing(Booking::getStart));
-    }
+    @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.bookerId = :userId AND b.itemId = :itemId AND b.end < :now AND b.status = 'APPROVED'")
+    boolean existsCompletedBooking(@Param("userId") Long userId, @Param("itemId") Long itemId, @Param("now") LocalDateTime now);
 }
