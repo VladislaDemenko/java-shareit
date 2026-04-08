@@ -31,16 +31,4 @@ public class ItemMapper {
         item.setOwnerId(ownerId);
         return item;
     }
-
-    public void updateEntity(Item existing, ItemDto updates) {
-        if (updates.getName() != null) {
-            existing.setName(updates.getName());
-        }
-        if (updates.getDescription() != null) {
-            existing.setDescription(updates.getDescription());
-        }
-        if (updates.getAvailable() != null) {
-            existing.setAvailable(updates.getAvailable());
-        }
-    }
 }

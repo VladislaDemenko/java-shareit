@@ -1,4 +1,4 @@
-package ru.practicum.shareit.request.dto;
+package ru.practicum.shareit.comment;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -13,12 +13,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ItemRequestDto {
+public class CommentDto {
     Long id;
 
-    @NotBlank(message = "Описание не может быть пустым")
-    String description;
+    @NotBlank(message = "Текст комментария не может быть пустым")
+    String text;
 
-    Long requesterId;
+    String authorName;
     LocalDateTime created;
 }

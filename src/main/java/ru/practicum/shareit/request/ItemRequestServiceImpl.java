@@ -2,21 +2,27 @@ package ru.practicum.shareit.request;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.user.UserRepository;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ItemRequestServiceImpl implements ItemRequestService {
     private final ItemRequestRepository requestRepository;
     private final UserRepository userRepository;
     private final ItemRequestMapper requestMapper;
 
     @Override
+    @Transactional
     public ItemRequestDto create(Long userId, ItemRequestDto requestDto) {
         log.info("Creating request for user: {}", userId);
 
@@ -46,7 +52,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
         validateUser(userId);
 
-        return requestRepository.findAllByRequesterId(userId).stream()
+        return requestRepository.findAllByRequesterIdOrderByCreatedDesc(userId).stream()
                 .map(requestMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -57,9 +63,9 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
         validateUser(userId);
 
-        return requestRepository.findAll().stream()
-                .skip(from)
-                .limit(size)
+        Pageable pageable = PageRequest.of(from / size, size);
+
+        return requestRepository.findAllExceptUser(userId, pageable).stream()
                 .map(requestMapper::toDto)
                 .collect(Collectors.toList());
     }

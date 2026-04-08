@@ -1,4 +1,4 @@
-package ru.practicum.shareit.request;
+package ru.practicum.shareit.comment;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -11,20 +11,23 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "requests")
+@Table(name = "comments")
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ItemRequest {
+public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(nullable = false, length = 1000)
-    String description;
+    @Column(nullable = false, length = 2000)
+    String text;
 
-    @Column(name = "requester_id", nullable = false)
-    Long requesterId;
+    @Column(name = "item_id", nullable = false)
+    Long itemId;
+
+    @Column(name = "author_id", nullable = false)
+    Long authorId;
 
     @Column(name = "created_date", nullable = false)
     LocalDateTime created;
