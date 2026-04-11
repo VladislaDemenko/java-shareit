@@ -27,13 +27,4 @@ public class UserMapper {
                 userDto.getEmail()
         );
     }
-
-    public void updateEntity(User existing, UserDto updates) {
-        if (updates.getName() != null) {
-            existing.setName(updates.getName());
-        }
-        if (updates.getEmail() != null) {
-            existing.setEmail(updates.getEmail());
-        }
-    }
 }
