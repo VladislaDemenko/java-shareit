@@ -2,20 +2,27 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingService;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.comment.Comment;
-import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.comment.CommentDto;
+import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,7 +33,9 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private final BookingRepository bookingRepository;
     private final BookingService bookingService;
+    private final ItemRequestRepository requestRepository;
     private final ItemMapper itemMapper;
 
     @Override
@@ -35,6 +44,11 @@ public class ItemServiceImpl implements ItemService {
         log.info("Creating item for user: {}", userId);
 
         validateUser(userId);
+
+        if (itemDto.getRequestId() != null) {
+            requestRepository.findById(itemDto.getRequestId())
+                    .orElseThrow(() -> new IllegalArgumentException("Запрос не найден"));
+        }
 
         Item item = itemMapper.toEntity(itemDto, userId);
         item = itemRepository.save(item);
@@ -94,36 +108,55 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> getAllByOwner(Long userId) {
+    public List<ItemDto> getAllByOwner(Long userId, Integer from, Integer size) {
         log.info("Getting all items for user: {}", userId);
 
         validateUser(userId);
 
-        return itemRepository.findAllByOwnerIdOrderByIdAsc(userId).stream()
+        Pageable pageable = PageRequest.of(from / size, size);
+
+        List<Item> items = itemRepository.findAllByOwnerIdOrderByIdAsc(userId, pageable);
+        List<Long> itemIds = items.stream().map(Item::getId).collect(Collectors.toList());
+
+        Map<Long, List<CommentDto>> commentsByItemId = commentRepository.findAllByItemIdIn(itemIds).stream()
+                .collect(Collectors.groupingBy(Comment::getItemId,
+                        Collectors.mapping(this::toCommentDto, Collectors.toList())));
+
+        LocalDateTime now = LocalDateTime.now();
+        Pageable one = PageRequest.of(0, 1);
+
+        Map<Long, List<BookingShortDto>> lastBookings = bookingRepository.findLastBookingsForItems(itemIds, now).stream()
+                .collect(Collectors.groupingBy(b -> b.getItemId(),
+                        Collectors.mapping(b -> new BookingShortDto(b.getId(), b.getBookerId()), Collectors.toList())));
+
+        Map<Long, List<BookingShortDto>> nextBookings = bookingRepository.findNextBookingsForItems(itemIds, now).stream()
+                .collect(Collectors.groupingBy(b -> b.getItemId(),
+                        Collectors.mapping(b -> new BookingShortDto(b.getId(), b.getBookerId()), Collectors.toList())));
+
+        return items.stream()
                 .map(item -> {
-                    ItemDto itemDto = itemMapper.toDto(item);
-                    itemDto.setLastBooking(bookingService.getLastBooking(item.getId()));
-                    itemDto.setNextBooking(bookingService.getNextBooking(item.getId()));
-
-                    List<CommentDto> comments = commentRepository.findAllByItemIdOrderByCreatedDesc(item.getId()).stream()
-                            .map(this::toCommentDto)
-                            .collect(Collectors.toList());
-                    itemDto.setComments(comments);
-
-                    return itemDto;
+                    ItemDto dto = itemMapper.toDto(item);
+                    dto.setComments(commentsByItemId.getOrDefault(item.getId(), new ArrayList<>()));
+                    List<BookingShortDto> last = lastBookings.get(item.getId());
+                    dto.setLastBooking(last != null && !last.isEmpty() ? last.get(0) : null);
+                    List<BookingShortDto> next = nextBookings.get(item.getId());
+                    dto.setNextBooking(next != null && !next.isEmpty() ? next.get(0) : null);
+                    return dto;
                 })
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ItemDto> search(String text) {
+    public List<ItemDto> search(String text, Integer from, Integer size) {
         log.info("Searching items with text: {}", text);
 
         if (text == null || text.isBlank()) {
             return List.of();
         }
 
-        return itemRepository.searchAvailable(text).stream()
+        Pageable pageable = PageRequest.of(from / size, size);
+
+        return itemRepository.searchAvailable(text, pageable).stream()
                 .map(itemMapper::toDto)
                 .collect(Collectors.toList());
     }
