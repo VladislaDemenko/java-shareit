@@ -30,4 +30,7 @@ public class Item {
 
     @Column(name = "owner_id", nullable = false)
     Long ownerId;
+
+    @Column(name = "request_id")
+    Long requestId;
 }
