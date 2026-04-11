@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -112,12 +113,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getAllByUser(Long userId, String state) {
+    public List<BookingDto> getAllByUser(Long userId, String state, Integer from, Integer size) {
         log.info("Getting all bookings for user {} with state {}", userId, state);
 
         validateUser(userId);
 
-        List<Booking> bookings = bookingRepository.findAllByBookerId(userId);
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
+        List<Booking> bookings = bookingRepository.findAllByBookerIdOrderByStartDesc(userId, pageable);
         List<Booking> filtered = filterByState(bookings, state);
 
         return filtered.stream()
@@ -126,12 +128,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getAllByOwner(Long userId, String state) {
+    public List<BookingDto> getAllByOwner(Long userId, String state, Integer from, Integer size) {
         log.info("Getting all bookings for owner {} with state {}", userId, state);
 
         validateUser(userId);
 
-        List<Booking> bookings = bookingRepository.findAllByItemOwnerId(userId);
+        Pageable pageable = PageRequest.of(from / size, size);
+        List<Booking> bookings = bookingRepository.findAllByItemOwnerId(userId, pageable);
         List<Booking> filtered = filterByState(bookings, state);
 
         return filtered.stream()
