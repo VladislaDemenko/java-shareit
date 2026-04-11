@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDto;
 
-import javax.validation.Valid;
 import java.util.List;
 
 @Slf4j
@@ -18,7 +17,7 @@ public class BookingController {
     @PostMapping
     public BookingDto create(
             @RequestHeader("X-Sharer-User-Id") Long userId,
-            @Valid @RequestBody BookingDto bookingDto) {
+            @RequestBody BookingDto bookingDto) {
         log.info("POST /bookings with userId: {}", userId);
         return bookingService.create(userId, bookingDto);
     }
@@ -43,16 +42,20 @@ public class BookingController {
     @GetMapping
     public List<BookingDto> getAllByUser(
             @RequestHeader("X-Sharer-User-Id") Long userId,
-            @RequestParam(defaultValue = "ALL") String state) {
+            @RequestParam(defaultValue = "ALL") String state,
+            @RequestParam(defaultValue = "0") Integer from,
+            @RequestParam(defaultValue = "10") Integer size) {
         log.info("GET /bookings with state: {}", state);
-        return bookingService.getAllByUser(userId, state);
+        return bookingService.getAllByUser(userId, state, from, size);
     }
 
     @GetMapping("/owner")
     public List<BookingDto> getAllByOwner(
             @RequestHeader("X-Sharer-User-Id") Long userId,
-            @RequestParam(defaultValue = "ALL") String state) {
+            @RequestParam(defaultValue = "ALL") String state,
+            @RequestParam(defaultValue = "0") Integer from,
+            @RequestParam(defaultValue = "10") Integer size) {
         log.info("GET /bookings/owner with state: {}", state);
-        return bookingService.getAllByOwner(userId, state);
+        return bookingService.getAllByOwner(userId, state, from, size);
     }
 }
