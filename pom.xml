@@ -15,10 +15,16 @@
 	<groupId>ru.practicum</groupId>
 	<artifactId>shareit</artifactId>
 	<version>1.0.0</version>
-	<name>ShareIt</name>
+    <packaging>pom</packaging>
+    <name>ShareIt</name>
 	<description>ShareIt application for item sharing</description>
+    <modules>
+        <module>gateway</module>
+		<module>server</module>
+		<module>gateway</module>
+	</modules>
 
-	<properties>
+    <properties>
 		<java.version>11</java.version>
 		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.target>11</maven.compiler.target>
