@@ -1,9 +1,7 @@
 package ru.practicum.shareit.booking.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import javax.validation.constraints.Future;
 import javax.validation.constraints.FutureOrPresent;
@@ -14,22 +12,23 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookingDto {
-    private Long id;
+    Long id;
 
     @NotNull(message = "Дата начала не может быть пустой")
     @FutureOrPresent(message = "Дата начала не может быть в прошлом")
-    private LocalDateTime start;
+    LocalDateTime start;
 
     @NotNull(message = "Дата окончания не может быть пустой")
     @Future(message = "Дата окончания должна быть в будущем")
-    private LocalDateTime end;
+    LocalDateTime end;
 
     @NotNull(message = "ID вещи не может быть пустым")
-    private Long itemId;
+    Long itemId;
 
-    private Long bookerId;
-    private BookingStatus status;
+    Long bookerId;
+    BookingStatus status;
 
     public enum BookingStatus {
         WAITING, APPROVED, REJECTED, CANCELED
