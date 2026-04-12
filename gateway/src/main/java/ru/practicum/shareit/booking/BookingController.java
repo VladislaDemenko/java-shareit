@@ -1,6 +1,8 @@
 package ru.practicum.shareit.booking;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -18,11 +20,15 @@ import javax.validation.constraints.PositiveOrZero;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BookingController {
-    private final BookingClient bookingClient;
+
+    private static final String USER_ID_HEADER = "X-Sharer-User-Id";
+
+    BookingClient bookingClient;
 
     @PostMapping
-    public ResponseEntity<Object> create(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ResponseEntity<Object> create(@RequestHeader(USER_ID_HEADER) long userId,
                                          @Valid @RequestBody BookingDto requestDto) {
         log.info("Creating booking {}, userId={}", requestDto, userId);
         validateBookingDates(requestDto);
@@ -30,7 +36,7 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}")
-    public ResponseEntity<Object> approve(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ResponseEntity<Object> approve(@RequestHeader(USER_ID_HEADER) long userId,
                                           @PathVariable Long bookingId,
                                           @RequestParam Boolean approved) {
         log.info("Approving booking {} with approved={}, userId={}", bookingId, approved, userId);
@@ -38,14 +44,14 @@ public class BookingController {
     }
 
     @GetMapping("/{bookingId}")
-    public ResponseEntity<Object> getById(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ResponseEntity<Object> getById(@RequestHeader(USER_ID_HEADER) long userId,
                                           @PathVariable Long bookingId) {
         log.info("Get booking {}, userId={}", bookingId, userId);
         return bookingClient.getById(userId, bookingId);
     }
 
     @GetMapping
-    public ResponseEntity<Object> getAllByUser(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ResponseEntity<Object> getAllByUser(@RequestHeader(USER_ID_HEADER) long userId,
                                                @RequestParam(name = "state", defaultValue = "all") String stateParam,
                                                @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                                @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
@@ -56,7 +62,7 @@ public class BookingController {
     }
 
     @GetMapping("/owner")
-    public ResponseEntity<Object> getAllByOwner(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ResponseEntity<Object> getAllByOwner(@RequestHeader(USER_ID_HEADER) long userId,
                                                 @RequestParam(name = "state", defaultValue = "all") String stateParam,
                                                 @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                                 @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
